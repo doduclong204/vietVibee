@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+
 import {
   Sidebar,
   SidebarContent,
@@ -10,8 +10,13 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { Users, BookOpen, Gamepad2, Award, Shield, TrendingUp } from "lucide-react";
+import { Users, BookOpen, Gamepad2, Award, Shield, TrendingUp, Home } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { useEffect, useState } from "react";
+import { callCountAllGames, callCountAllLessons, callCountAllUsers } from "@/config/api";
+import Dashboard from "./Dashboard";
+import { useNavigate } from "react-router-dom";
+import { Button } from "../ui/button";
 
 
 interface AdminSidebarProps {
@@ -25,16 +30,48 @@ interface AdminSidebarProps {
 }
 
 export function AdminSidebar({ stats, activeTab, onTabChange }: AdminSidebarProps) {
+  const [countUsers, setCountUsers] = useState(0);
+  const [countLessons, setCountLessons]= useState(0);
+  const [countGames, setCountGames]= useState(0);
   const { state } = useSidebar();
+  const navigate = useNavigate();
   const collapsed = state === "collapsed";
 
   const navItems = [
-    { id: "users", title: "Users", icon: Users, count: stats.users },
-    { id: "lessons", title: "Lessons", icon: BookOpen, count: stats.lessons },
-    // { id: "vocabulary", title: "Vocabulary", icon: BookOpen, count: null },
-    { id: "games", title: "Games", icon: Gamepad2, count: stats.games },
+    { id: "dashboard", title: "Dashboard", icon: TrendingUp, count: null },
+    { id: "users", title: "Users", icon: Users, count: countUsers },
+    { id: "lessons", title: "Lessons", icon: BookOpen, count: countLessons },
+    { id: "games", title: "Games", icon: Gamepad2, count: countGames },
     { id: "points", title: "Points", icon: Award, count: null },
   ];
+
+  const fetchCountUsers = async () =>{
+    const res = await callCountAllUsers();
+    if(res.statusCode == 200){
+      setCountUsers(res.data.count);
+    }
+  }
+
+  const fetchCountLessons = async () =>{
+    const res = await callCountAllLessons();
+    if(res.statusCode == 200){
+      setCountLessons(res.data.count);
+    }
+  }
+
+  const fetchCountGames = async () =>{
+    const res = await callCountAllGames();
+    console.log(res);
+    if(res.statusCode == 200){
+      setCountGames(res.data.count);
+    }
+  }
+
+  useEffect(() =>{
+    fetchCountUsers();
+    fetchCountLessons();
+    fetchCountGames();
+  },[])
 
   return (
     <Sidebar className={collapsed ? "w-20" : "w-[250px]"} collapsible="icon">
@@ -82,7 +119,7 @@ export function AdminSidebar({ stats, activeTab, onTabChange }: AdminSidebarProp
                     <Users className="h-4 w-4 text-primary" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-primary">{stats.users}</p>
+                    <p className="text-2xl font-bold text-primary">{countUsers}</p>
                     <p className="text-xs text-muted-foreground">Total Users</p>
                   </div>
                 </div>
@@ -96,7 +133,7 @@ export function AdminSidebar({ stats, activeTab, onTabChange }: AdminSidebarProp
                     <BookOpen className="h-4 w-4 text-secondary" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-secondary">{stats.lessons}</p>
+                    <p className="text-2xl font-bold text-secondary">{countLessons}</p>
                     <p className="text-xs text-muted-foreground">Total Lessons</p>
                   </div>
                 </div>
@@ -110,7 +147,7 @@ export function AdminSidebar({ stats, activeTab, onTabChange }: AdminSidebarProp
                     <Gamepad2 className="h-4 w-4 text-accent" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-accent">{stats.games}</p>
+                    <p className="text-2xl font-bold text-accent">{countGames}</p>
                     <p className="text-xs text-muted-foreground">Total Games</p>
                   </div>
                 </div>
@@ -161,7 +198,28 @@ export function AdminSidebar({ stats, activeTab, onTabChange }: AdminSidebarProp
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        {/* Home Button */}
+        <div className={`mt-auto p-4 border-t border-border/50 ${collapsed ? "flex justify-center" : ""}`}>
+          <Button
+            variant="outline"
+            onClick={() => navigate("/")}
+            className={`w-full gap-2 ${collapsed ? "p-2 w-auto" : ""}`}
+          >
+            <Home className="h-4 w-4" />
+            {!collapsed && <span>Về trang chủ</span>}
+          </Button>
+        </div>
       </SidebarContent>
+      <div className={`absolute bottom-0 left-0 right-0 p-4 border-t border-border/50 bg-background ${collapsed ? "flex justify-center" : ""}`}>
+        <Button
+          variant="outline"
+          onClick={() => navigate("/")}
+          className={`w-full gap-2 ${collapsed ? "p-2 w-auto" : ""}`}
+        >
+          <Home className="h-4 w-4" />
+          {!collapsed && <span>Về trang chủ</span>}
+        </Button>
+      </div>
     </Sidebar>
   );
 }
